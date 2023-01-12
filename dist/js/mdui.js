@@ -39,7 +39,30 @@
   });
 
   var $$a = require('../internals/export');
-  var fails$6 = require('../internals/fails');
+  var uncurryThis$3 = require('../internals/function-uncurry-this-clause');
+  var $indexOf = require('../internals/array-includes').indexOf;
+  var arrayMethodIsStrict$2 = require('../internals/array-method-is-strict');
+  var nativeIndexOf = uncurryThis$3([].indexOf);
+  var NEGATIVE_ZERO = !!nativeIndexOf && 1 / nativeIndexOf([1], 1, -0) < 0;
+  var STRICT_METHOD$2 = arrayMethodIsStrict$2('indexOf');
+
+  // `Array.prototype.indexOf` method
+  // https://tc39.es/ecma262/#sec-array.prototype.indexof
+  $$a({
+    target: 'Array',
+    proto: true,
+    forced: NEGATIVE_ZERO || !STRICT_METHOD$2
+  }, {
+    indexOf: function indexOf(searchElement /* , fromIndex = 0 */) {
+      var fromIndex = arguments.length > 1 ? arguments[1] : undefined;
+      return NEGATIVE_ZERO
+      // convert -0 to +0
+      ? nativeIndexOf(this, searchElement, fromIndex) || 0 : $indexOf(this, searchElement, fromIndex);
+    }
+  });
+
+  var $$9 = require('../internals/export');
+  var fails$5 = require('../internals/fails');
   var isArray$1 = require('../internals/is-array');
   var isObject$1 = require('../internals/is-object');
   var toObject$2 = require('../internals/to-object');
@@ -55,7 +78,7 @@
   // We can't use this feature detection in V8 since it causes
   // deoptimization and serious performance degradation
   // https://github.com/zloirock/core-js/issues/679
-  var IS_CONCAT_SPREADABLE_SUPPORT = V8_VERSION >= 51 || !fails$6(function () {
+  var IS_CONCAT_SPREADABLE_SUPPORT = V8_VERSION >= 51 || !fails$5(function () {
     var array = [];
     array[IS_CONCAT_SPREADABLE] = false;
     return array.concat()[0] !== array;
@@ -71,7 +94,7 @@
   // `Array.prototype.concat` method
   // https://tc39.es/ecma262/#sec-array.prototype.concat
   // with adding support of @@isConcatSpreadable and @@species
-  $$a({
+  $$9({
     target: 'Array',
     proto: true,
     arity: 1,
@@ -101,28 +124,28 @@
 
   var apply = require('../internals/function-apply');
   var call$1 = require('../internals/function-call');
-  var uncurryThis$5 = require('../internals/function-uncurry-this');
+  var uncurryThis$2 = require('../internals/function-uncurry-this');
   var fixRegExpWellKnownSymbolLogic$1 = require('../internals/fix-regexp-well-known-symbol-logic');
-  var fails$5 = require('../internals/fails');
-  var anObject$3 = require('../internals/an-object');
+  var fails$4 = require('../internals/fails');
+  var anObject$2 = require('../internals/an-object');
   var isCallable = require('../internals/is-callable');
   var isNullOrUndefined$1 = require('../internals/is-null-or-undefined');
   var toIntegerOrInfinity = require('../internals/to-integer-or-infinity');
-  var toLength$2 = require('../internals/to-length');
+  var toLength$1 = require('../internals/to-length');
   var toString$4 = require('../internals/to-string');
   var requireObjectCoercible$1 = require('../internals/require-object-coercible');
   var advanceStringIndex$1 = require('../internals/advance-string-index');
   var getMethod$1 = require('../internals/get-method');
   var getSubstitution = require('../internals/get-substitution');
-  var regExpExec$2 = require('../internals/regexp-exec-abstract');
+  var regExpExec$1 = require('../internals/regexp-exec-abstract');
   var wellKnownSymbol$2 = require('../internals/well-known-symbol');
   var REPLACE = wellKnownSymbol$2('replace');
   var max$1 = Math.max;
   var min = Math.min;
-  var concat = uncurryThis$5([].concat);
-  var push$1 = uncurryThis$5([].push);
-  var stringIndexOf$1 = uncurryThis$5(''.indexOf);
-  var stringSlice$1 = uncurryThis$5(''.slice);
+  var concat = uncurryThis$2([].concat);
+  var push$1 = uncurryThis$2([].push);
+  var stringIndexOf$1 = uncurryThis$2(''.indexOf);
+  var stringSlice$1 = uncurryThis$2(''.slice);
   var maybeToString = function maybeToString(it) {
     return it === undefined ? it : String(it);
   };
@@ -141,7 +164,7 @@
     }
     return false;
   }();
-  var REPLACE_SUPPORTS_NAMED_GROUPS = !fails$5(function () {
+  var REPLACE_SUPPORTS_NAMED_GROUPS = !fails$4(function () {
     var re = /./;
     re.exec = function () {
       var result = [];
@@ -168,7 +191,7 @@
     // `RegExp.prototype[@@replace]` method
     // https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
     function (string, replaceValue) {
-      var rx = anObject$3(this);
+      var rx = anObject$2(this);
       var S = toString$4(string);
       if (typeof replaceValue == 'string' && stringIndexOf$1(replaceValue, UNSAFE_SUBSTITUTE) === -1 && stringIndexOf$1(replaceValue, '$<') === -1) {
         var res = maybeCallNative(nativeReplace, rx, S, replaceValue);
@@ -183,12 +206,12 @@
       }
       var results = [];
       while (true) {
-        var result = regExpExec$2(rx, S);
+        var result = regExpExec$1(rx, S);
         if (result === null) break;
         push$1(results, result);
         if (!global) break;
         var matchStr = toString$4(result[0]);
-        if (matchStr === '') rx.lastIndex = advanceStringIndex$1(S, toLength$2(rx.lastIndex), fullUnicode);
+        if (matchStr === '') rx.lastIndex = advanceStringIndex$1(S, toLength$1(rx.lastIndex), fullUnicode);
       }
       var accumulatedResult = '';
       var nextSourcePosition = 0;
@@ -220,9 +243,9 @@
     }];
   }, !REPLACE_SUPPORTS_NAMED_GROUPS || !REPLACE_KEEPS_$0 || REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE);
 
-  var DESCRIPTORS$1 = require('../internals/descriptors');
-  var global$2 = require('../internals/global');
-  var uncurryThis$4 = require('../internals/function-uncurry-this');
+  var DESCRIPTORS = require('../internals/descriptors');
+  var global$1 = require('../internals/global');
+  var uncurryThis$1 = require('../internals/function-uncurry-this');
   var isForced = require('../internals/is-forced');
   var inheritIfRequired = require('../internals/inherit-if-required');
   var createNonEnumerableProperty$1 = require('../internals/create-non-enumerable-property');
@@ -234,22 +257,22 @@
   var stickyHelpers = require('../internals/regexp-sticky-helpers');
   var proxyAccessor = require('../internals/proxy-accessor');
   var defineBuiltIn$2 = require('../internals/define-built-in');
-  var fails$4 = require('../internals/fails');
+  var fails$3 = require('../internals/fails');
   var hasOwn = require('../internals/has-own-property');
   var enforceInternalState = require('../internals/internal-state').enforce;
-  var setSpecies$1 = require('../internals/set-species');
+  var setSpecies = require('../internals/set-species');
   var wellKnownSymbol$1 = require('../internals/well-known-symbol');
   var UNSUPPORTED_DOT_ALL = require('../internals/regexp-unsupported-dot-all');
   var UNSUPPORTED_NCG = require('../internals/regexp-unsupported-ncg');
   var MATCH = wellKnownSymbol$1('match');
-  var NativeRegExp = global$2.RegExp;
+  var NativeRegExp = global$1.RegExp;
   var RegExpPrototype$1 = NativeRegExp.prototype;
-  var SyntaxError = global$2.SyntaxError;
-  var exec = uncurryThis$4(RegExpPrototype$1.exec);
-  var charAt = uncurryThis$4(''.charAt);
-  var replace = uncurryThis$4(''.replace);
-  var stringIndexOf = uncurryThis$4(''.indexOf);
-  var stringSlice = uncurryThis$4(''.slice);
+  var SyntaxError = global$1.SyntaxError;
+  var exec = uncurryThis$1(RegExpPrototype$1.exec);
+  var charAt = uncurryThis$1(''.charAt);
+  var replace = uncurryThis$1(''.replace);
+  var stringIndexOf = uncurryThis$1(''.indexOf);
+  var stringSlice = uncurryThis$1(''.slice);
   // TODO: Use only proper RegExpIdentifierName
   var IS_NCG = /^\?<[^\s\d!#%&*+<=>@^][^\s!#%&*+<=>@^]*>/;
   var re1 = /a/g;
@@ -259,7 +282,7 @@
   var CORRECT_NEW = new NativeRegExp(re1) !== re1;
   var MISSED_STICKY = stickyHelpers.MISSED_STICKY;
   var UNSUPPORTED_Y = stickyHelpers.UNSUPPORTED_Y;
-  var BASE_FORCED = DESCRIPTORS$1 && (!CORRECT_NEW || MISSED_STICKY || UNSUPPORTED_DOT_ALL || UNSUPPORTED_NCG || fails$4(function () {
+  var BASE_FORCED = DESCRIPTORS && (!CORRECT_NEW || MISSED_STICKY || UNSUPPORTED_DOT_ALL || UNSUPPORTED_NCG || fails$3(function () {
     re2[MATCH] = false;
     // RegExp constructor can alter flags and IsRegExp works correct with @@match
     return NativeRegExp(re1) != re1 || NativeRegExp(re2) == re2 || NativeRegExp(re1, 'i') != '/a/i';
@@ -388,13 +411,13 @@
     }
     RegExpPrototype$1.constructor = RegExpWrapper;
     RegExpWrapper.prototype = RegExpPrototype$1;
-    defineBuiltIn$2(global$2, 'RegExp', RegExpWrapper, {
+    defineBuiltIn$2(global$1, 'RegExp', RegExpWrapper, {
       constructor: true
     });
   }
 
   // https://tc39.es/ecma262/#sec-get-regexp-@@species
-  setSpecies$1('RegExp');
+  setSpecies('RegExp');
 
   var TO_STRING_TAG_SUPPORT = require('../internals/to-string-tag-support');
   var defineBuiltIn$1 = require('../internals/define-built-in');
@@ -408,41 +431,16 @@
     });
   }
 
-  var DESCRIPTORS = require('../internals/descriptors');
-  var FUNCTION_NAME_EXISTS = require('../internals/function-name').EXISTS;
-  var uncurryThis$3 = require('../internals/function-uncurry-this');
-  var defineProperty = require('../internals/object-define-property').f;
-  var FunctionPrototype = Function.prototype;
-  var functionToString = uncurryThis$3(FunctionPrototype.toString);
-  var nameRE = /function\b(?:\s|\/\*[\S\s]*?\*\/|\/\/[^\n\r]*[\n\r]+)*([^\s(/]*)/;
-  var regExpExec$1 = uncurryThis$3(nameRE.exec);
-  var NAME = 'name';
-
-  // Function instances `.name` property
-  // https://tc39.es/ecma262/#sec-function-instances-name
-  if (DESCRIPTORS && !FUNCTION_NAME_EXISTS) {
-    defineProperty(FunctionPrototype, NAME, {
-      configurable: true,
-      get: function get() {
-        try {
-          return regExpExec$1(nameRE, functionToString(this))[1];
-        } catch (error) {
-          return '';
-        }
-      }
-    });
-  }
-
   var PROPER_FUNCTION_NAME = require('../internals/function-name').PROPER;
   var defineBuiltIn = require('../internals/define-built-in');
-  var anObject$2 = require('../internals/an-object');
+  var anObject$1 = require('../internals/an-object');
   var $toString = require('../internals/to-string');
-  var fails$3 = require('../internals/fails');
+  var fails$2 = require('../internals/fails');
   var getRegExpFlags = require('../internals/regexp-get-flags');
   var TO_STRING = 'toString';
   var RegExpPrototype = RegExp.prototype;
   var nativeToString = RegExpPrototype[TO_STRING];
-  var NOT_GENERIC = fails$3(function () {
+  var NOT_GENERIC = fails$2(function () {
     return nativeToString.call({
       source: 'a',
       flags: 'b'
@@ -455,7 +453,7 @@
   // https://tc39.es/ecma262/#sec-regexp.prototype.tostring
   if (NOT_GENERIC || INCORRECT_NAME) {
     defineBuiltIn(RegExp.prototype, TO_STRING, function toString() {
-      var R = anObject$2(this);
+      var R = anObject$1(this);
       var pattern = $toString(R.source);
       var flags = $toString(getRegExpFlags(R));
       return '/' + pattern + '/' + flags;
@@ -466,9 +464,9 @@
 
   var call = require('../internals/function-call');
   var fixRegExpWellKnownSymbolLogic = require('../internals/fix-regexp-well-known-symbol-logic');
-  var anObject$1 = require('../internals/an-object');
+  var anObject = require('../internals/an-object');
   var isNullOrUndefined = require('../internals/is-null-or-undefined');
-  var toLength$1 = require('../internals/to-length');
+  var toLength = require('../internals/to-length');
   var toString$1 = require('../internals/to-string');
   var requireObjectCoercible = require('../internals/require-object-coercible');
   var getMethod = require('../internals/get-method');
@@ -488,7 +486,7 @@
     // `RegExp.prototype[@@match]` method
     // https://tc39.es/ecma262/#sec-regexp.prototype-@@match
     function (string) {
-      var rx = anObject$1(this);
+      var rx = anObject(this);
       var S = toString$1(string);
       var res = maybeCallNative(nativeMatch, rx, S);
       if (res.done) return res.value;
@@ -501,20 +499,20 @@
       while ((result = regExpExec(rx, S)) !== null) {
         var matchStr = toString$1(result[0]);
         A[n] = matchStr;
-        if (matchStr === '') rx.lastIndex = advanceStringIndex(S, toLength$1(rx.lastIndex), fullUnicode);
+        if (matchStr === '') rx.lastIndex = advanceStringIndex(S, toLength(rx.lastIndex), fullUnicode);
         n++;
       }
       return n === 0 ? null : A;
     }];
   });
 
-  var $$9 = require('../internals/export');
+  var $$8 = require('../internals/export');
   var isArray = require('../internals/is-array');
   var isConstructor = require('../internals/is-constructor');
   var isObject = require('../internals/is-object');
-  var toAbsoluteIndex$1 = require('../internals/to-absolute-index');
+  var toAbsoluteIndex = require('../internals/to-absolute-index');
   var lengthOfArrayLike$1 = require('../internals/length-of-array-like');
-  var toIndexedObject$1 = require('../internals/to-indexed-object');
+  var toIndexedObject = require('../internals/to-indexed-object');
   var createProperty = require('../internals/create-property');
   var wellKnownSymbol = require('../internals/well-known-symbol');
   var arrayMethodHasSpeciesSupport$2 = require('../internals/array-method-has-species-support');
@@ -527,16 +525,16 @@
   // `Array.prototype.slice` method
   // https://tc39.es/ecma262/#sec-array.prototype.slice
   // fallback for not array-like ES3 strings and DOM objects
-  $$9({
+  $$8({
     target: 'Array',
     proto: true,
     forced: !HAS_SPECIES_SUPPORT$2
   }, {
     slice: function slice(start, end) {
-      var O = toIndexedObject$1(this);
+      var O = toIndexedObject(this);
       var length = lengthOfArrayLike$1(O);
-      var k = toAbsoluteIndex$1(start, length);
-      var fin = toAbsoluteIndex$1(end === undefined ? length : end, length);
+      var k = toAbsoluteIndex(start, length);
+      var fin = toAbsoluteIndex(end === undefined ? length : end, length);
       // inline `ArraySpeciesCreate` for usage native `Array#slice` where it's possible
       var Constructor, result, n;
       if (isArray(O)) {
@@ -559,17 +557,17 @@
     }
   });
 
-  var $$8 = require('../internals/export');
+  var $$7 = require('../internals/export');
   var toObject$1 = require('../internals/to-object');
   var nativeKeys = require('../internals/object-keys');
-  var fails$2 = require('../internals/fails');
-  var FAILS_ON_PRIMITIVES = fails$2(function () {
+  var fails$1 = require('../internals/fails');
+  var FAILS_ON_PRIMITIVES = fails$1(function () {
     nativeKeys(1);
   });
 
   // `Object.keys` method
   // https://tc39.es/ecma262/#sec-object.keys
-  $$8({
+  $$7({
     target: 'Object',
     stat: true,
     forced: FAILS_ON_PRIMITIVES
@@ -663,6 +661,41 @@
     var key = _toPrimitive(arg, "string");
     return typeof key === "symbol" ? key : String(key);
   }
+
+  var $$6 = require('../internals/export');
+  var $reduce = require('../internals/array-reduce').left;
+  var arrayMethodIsStrict$1 = require('../internals/array-method-is-strict');
+  var CHROME_VERSION = require('../internals/engine-v8-version');
+  var IS_NODE = require('../internals/engine-is-node');
+  var STRICT_METHOD$1 = arrayMethodIsStrict$1('reduce');
+  // Chrome 80-82 has a critical bug
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=1049982
+  var CHROME_BUG = !IS_NODE && CHROME_VERSION > 79 && CHROME_VERSION < 83;
+
+  // `Array.prototype.reduce` method
+  // https://tc39.es/ecma262/#sec-array.prototype.reduce
+  $$6({
+    target: 'Array',
+    proto: true,
+    forced: !STRICT_METHOD$1 || CHROME_BUG
+  }, {
+    reduce: function reduce(callbackfn /* , initialValue */) {
+      var length = arguments.length;
+      return $reduce(this, callbackfn, length, length > 1 ? arguments[1] : undefined);
+    }
+  });
+
+  var $$5 = require('../internals/export');
+  var $parseFloat = require('../internals/number-parse-float');
+
+  // `parseFloat` method
+  // https://tc39.es/ecma262/#sec-parsefloat-string
+  $$5({
+    global: true,
+    forced: parseFloat != $parseFloat
+  }, {
+    parseFloat: $parseFloat
+  });
 
   function isFunction(target) {
     return typeof target === 'function';
@@ -897,78 +930,14 @@
     $.fn = JQ.prototype;
     return $;
   }
-  var $$7 = get$();
+  var $$4 = get$();
 
   // 避免页面加载完后直接执行css动画
   // https://css-tricks.com/transitions-only-after-page-load/
-  setTimeout(() => $$7('body').addClass('mdui-loaded'));
+  setTimeout(() => $$4('body').addClass('mdui-loaded'));
   const mdui = {
-      $: $$7,
+      $: $$4,
   };
-
-  var $$6 = require('../internals/export');
-  var global$1 = require('../internals/global');
-  var arrayBufferModule = require('../internals/array-buffer');
-  var setSpecies = require('../internals/set-species');
-  var ARRAY_BUFFER = 'ArrayBuffer';
-  var ArrayBuffer$2 = arrayBufferModule[ARRAY_BUFFER];
-  var NativeArrayBuffer = global$1[ARRAY_BUFFER];
-
-  // `ArrayBuffer` constructor
-  // https://tc39.es/ecma262/#sec-arraybuffer-constructor
-  $$6({
-    global: true,
-    constructor: true,
-    forced: NativeArrayBuffer !== ArrayBuffer$2
-  }, {
-    ArrayBuffer: ArrayBuffer$2
-  });
-  setSpecies(ARRAY_BUFFER);
-
-  var $$5 = require('../internals/export');
-  var uncurryThis$2 = require('../internals/function-uncurry-this-clause');
-  var fails$1 = require('../internals/fails');
-  var ArrayBufferModule = require('../internals/array-buffer');
-  var anObject = require('../internals/an-object');
-  var toAbsoluteIndex = require('../internals/to-absolute-index');
-  var toLength = require('../internals/to-length');
-  var speciesConstructor = require('../internals/species-constructor');
-  var ArrayBuffer$1 = ArrayBufferModule.ArrayBuffer;
-  var DataView = ArrayBufferModule.DataView;
-  var DataViewPrototype = DataView.prototype;
-  var nativeArrayBufferSlice = uncurryThis$2(ArrayBuffer$1.prototype.slice);
-  var getUint8 = uncurryThis$2(DataViewPrototype.getUint8);
-  var setUint8 = uncurryThis$2(DataViewPrototype.setUint8);
-  var INCORRECT_SLICE = fails$1(function () {
-    return !new ArrayBuffer$1(2).slice(1, undefined).byteLength;
-  });
-
-  // `ArrayBuffer.prototype.slice` method
-  // https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
-  $$5({
-    target: 'ArrayBuffer',
-    proto: true,
-    unsafe: true,
-    forced: INCORRECT_SLICE
-  }, {
-    slice: function slice(start, end) {
-      if (nativeArrayBufferSlice && end === undefined) {
-        return nativeArrayBufferSlice(anObject(this), start); // FF fix
-      }
-
-      var length = anObject(this).byteLength;
-      var first = toAbsoluteIndex(start, length);
-      var fin = toAbsoluteIndex(end === undefined ? length : end, length);
-      var result = new (speciesConstructor(this, ArrayBuffer$1))(toLength(fin - first));
-      var viewSource = new DataView(this);
-      var viewTarget = new DataView(result);
-      var index = 0;
-      while (first < fin) {
-        setUint8(viewTarget, index++, getUint8(viewSource, first++));
-      }
-      return result;
-    }
-  });
 
   // TODO: Remove this module from `core-js@4` since it's split to modules listed below
   require('../modules/es.promise.constructor');
@@ -978,30 +947,9 @@
   require('../modules/es.promise.reject');
   require('../modules/es.promise.resolve');
 
-  $$7.fn.each = function (callback) {
+  $$4.fn.each = function (callback) {
     return each(this, callback);
   };
-
-  var $$4 = require('../internals/export');
-  var uncurryThis$1 = require('../internals/function-uncurry-this');
-  var IndexedObject = require('../internals/indexed-object');
-  var toIndexedObject = require('../internals/to-indexed-object');
-  var arrayMethodIsStrict$1 = require('../internals/array-method-is-strict');
-  var nativeJoin = uncurryThis$1([].join);
-  var ES3_STRINGS = IndexedObject != Object;
-  var STRICT_METHOD$1 = arrayMethodIsStrict$1('join', ',');
-
-  // `Array.prototype.join` method
-  // https://tc39.es/ecma262/#sec-array.prototype.join
-  $$4({
-    target: 'Array',
-    proto: true,
-    forced: ES3_STRINGS || !STRICT_METHOD$1
-  }, {
-    join: function join(separator) {
-      return nativeJoin(toIndexedObject(this), separator === undefined ? ',' : separator);
-    }
-  });
 
   var $$3 = require('../internals/export');
   var uncurryThis = require('../internals/function-uncurry-this');
@@ -1205,14 +1153,14 @@
     return first;
   }
 
-  $$7.fn.get = function (index) {
+  $$4.fn.get = function (index) {
     return index === undefined ? [].slice.call(this) : this[index >= 0 ? index : index + this.length];
   };
 
-  $$7.fn.find = function (selector) {
+  $$4.fn.find = function (selector) {
     var foundElements = [];
     this.each(function (_, element) {
-      merge(foundElements, $$7(element.querySelectorAll(selector)).get());
+      merge(foundElements, $$4(element.querySelectorAll(selector)).get());
     });
     return new JQ(foundElements);
   };
@@ -1305,7 +1253,7 @@
         e._data = data;
         if (selector) {
           // 事件代理
-          $$7(element).find(selector).get().reverse().forEach(function (elem) {
+          $$4(element).find(selector).get().reverse().forEach(function (elem) {
             if (elem === e.target || contains(elem, e.target)) {
               callFn(e, elem);
             }
@@ -1355,7 +1303,7 @@
     }
   }
 
-  $$7.fn.trigger = function (type, extraParameters) {
+  $$4.fn.trigger = function (type, extraParameters) {
     var event = parse(type);
     var eventObject;
     var eventParams = {
@@ -1573,7 +1521,7 @@
     function trigger(event, params, callback) {
       // 触发全局事件
       if (global) {
-        $$7(document).trigger(event, params);
+        $$4(document).trigger(event, params);
       }
       // 触发 ajax 回调和事件
       var result1;
@@ -1727,7 +1675,7 @@
     return XHR();
   }
 
-  $$7.ajax = ajax;
+  $$4.ajax = ajax;
 
   /**
    * 为 Ajax 请求设置全局配置参数
@@ -1744,9 +1692,9 @@
     return extend(globalOptions, options);
   }
 
-  $$7.ajaxSetup = ajaxSetup;
+  $$4.ajaxSetup = ajaxSetup;
 
-  $$7.contains = contains;
+  $$4.contains = contains;
 
   var dataNS = '_mduiElementDataStorage';
 
@@ -1796,11 +1744,11 @@
     return undefined;
   }
 
-  $$7.data = data;
+  $$4.data = data;
 
-  $$7.each = each;
+  $$4.each = each;
 
-  $$7.extend = function () {
+  $$4.extend = function () {
     var _this = this;
     for (var _len = arguments.length, objectN = new Array(_len), _key = 0; _key < _len; _key++) {
       objectN[_key] = arguments[_key];
@@ -1845,11 +1793,11 @@
     return (_ref = []).concat.apply(_ref, ret);
   }
 
-  $$7.map = map;
+  $$4.map = map;
 
-  $$7.merge = merge;
+  $$4.merge = merge;
 
-  $$7.param = param;
+  $$4.param = param;
 
   /**
    * 移除指定元素上存放的数据
@@ -1915,7 +1863,7 @@
     }
   }
 
-  $$7.removeData = removeData;
+  $$4.removeData = removeData;
 
   /**
    * 过滤掉数组中的重复元素
@@ -1936,14 +1884,14 @@
     return result;
   }
 
-  $$7.unique = unique;
+  $$4.unique = unique;
 
-  $$7.fn.add = function (selector) {
-    return new JQ(unique(merge(this.get(), $$7(selector).get())));
+  $$4.fn.add = function (selector) {
+    return new JQ(unique(merge(this.get(), $$4(selector).get())));
   };
 
   each(['add', 'remove', 'toggle'], function (_, name) {
-    $$7.fn["".concat(name, "Class")] = function (className) {
+    $$4.fn["".concat(name, "Class")] = function (className) {
       if (name === 'remove' && !arguments.length) {
         return this.each(function (_, element) {
           element.setAttribute('class', '');
@@ -1964,9 +1912,9 @@
   });
 
   each(['insertBefore', 'insertAfter'], function (nameIndex, name) {
-    $$7.fn[name] = function (target) {
-      var $element = nameIndex ? $$7(this.get().reverse()) : this; // 顺序和 jQuery 保持一致
-      var $target = $$7(target);
+    $$4.fn[name] = function (target) {
+      var $element = nameIndex ? $$4(this.get().reverse()) : this; // 顺序和 jQuery 保持一致
+      var $target = $$4(target);
       var result = [];
       $target.each(function (index, target) {
         if (!target.parentNode) {
@@ -1979,7 +1927,7 @@
           target.parentNode.insertBefore(newItem, existingItem);
         });
       });
-      return $$7(nameIndex ? result.reverse() : result);
+      return $$4(nameIndex ? result.reverse() : result);
     };
   });
 
@@ -1991,7 +1939,7 @@
     return isString(target) && (target[0] !== '<' || target[target.length - 1] !== '>');
   }
   each(['before', 'after'], function (nameIndex, name) {
-    $$7.fn[name] = function () {
+    $$4.fn[name] = function () {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
       }
@@ -2004,11 +1952,11 @@
         each(targets, function (_, target) {
           var $target;
           if (isPlainText(target)) {
-            $target = $$7(getChildNodesArray(target, 'div'));
+            $target = $$4(getChildNodesArray(target, 'div'));
           } else if (index && isElement(target)) {
-            $target = $$7(target.cloneNode(true));
+            $target = $$4(target.cloneNode(true));
           } else {
-            $target = $$7(target);
+            $target = $$4(target);
           }
           $target[nameIndex ? 'insertAfter' : 'insertBefore'](element);
         });
@@ -2016,7 +1964,7 @@
     };
   });
 
-  $$7.fn.off = function (types, selector, callback) {
+  $$4.fn.off = function (types, selector, callback) {
     var _this = this;
     // types 是对象
     if (isObjectLike(types)) {
@@ -2042,7 +1990,7 @@
     });
   };
 
-  $$7.fn.on = function (types, selector, data, _callback, one) {
+  $$4.fn.on = function (types, selector, data, _callback, one) {
     var _this2 = this;
     // types 可以是 type/func 对象
     if (isObjectLike(types)) {
@@ -2097,26 +2045,26 @@
   };
 
   each(ajaxEvents, function (name, eventName) {
-    $$7.fn[name] = function (fn) {
+    $$4.fn[name] = function (fn) {
       return this.on(eventName, function (e, params) {
         fn(e, params.xhr, params.options, params.data);
       });
     };
   });
 
-  $$7.fn.map = function (callback) {
+  $$4.fn.map = function (callback) {
     return new JQ(map(this, function (element, i) {
       return callback.call(element, i, element);
     }));
   };
 
-  $$7.fn.clone = function () {
+  $$4.fn.clone = function () {
     return this.map(function () {
       return this.cloneNode(true);
     });
   };
 
-  $$7.fn.is = function (selector) {
+  $$4.fn.is = function (selector) {
     var isMatched = false;
     if (isFunction(selector)) {
       this.each(function (index, element) {
@@ -2139,7 +2087,7 @@
       });
       return isMatched;
     }
-    var $compareWith = $$7(selector);
+    var $compareWith = $$4(selector);
     this.each(function (_, element) {
       $compareWith.each(function (_, compare) {
         if (element === compare) {
@@ -2150,16 +2098,16 @@
     return isMatched;
   };
 
-  $$7.fn.remove = function (selector) {
+  $$4.fn.remove = function (selector) {
     return this.each(function (_, element) {
-      if (element.parentNode && (!selector || $$7(element).is(selector))) {
+      if (element.parentNode && (!selector || $$4(element).is(selector))) {
         element.parentNode.removeChild(element);
       }
     });
   };
 
   each(['prepend', 'append'], function (nameIndex, name) {
-    $$7.fn[name] = function () {
+    $$4.fn[name] = function () {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
       }
@@ -2175,10 +2123,10 @@
         // 如果不是字符串，则仅第一个元素使用原始元素，其他的都克隆自第一个元素
         if (index) {
           contents = contents.map(function (content) {
-            return isString(content) ? content : $$7(content).clone();
+            return isString(content) ? content : $$4(content).clone();
           });
         }
-        (_$ = $$7(child))[nameIndex ? 'after' : 'before'].apply(_$, _toConsumableArray(contents));
+        (_$ = $$4(child))[nameIndex ? 'after' : 'before'].apply(_$, _toConsumableArray(contents));
         if (!childLength) {
           element.removeChild(child);
         }
@@ -2187,9 +2135,9 @@
   });
 
   each(['appendTo', 'prependTo'], function (nameIndex, name) {
-    $$7.fn[name] = function (target) {
+    $$4.fn[name] = function (target) {
       var extraChilds = [];
-      var $target = $$7(target).map(function (_, element) {
+      var $target = $$4(target).map(function (_, element) {
         var childNodes = element.childNodes;
         var childLength = childNodes.length;
         if (childLength) {
@@ -2201,7 +2149,7 @@
         return child;
       });
       var $result = this[nameIndex ? 'insertBefore' : 'insertAfter']($target);
-      $$7(extraChilds).remove();
+      $$4(extraChilds).remove();
       return $result;
     };
   });
@@ -2250,7 +2198,7 @@
           return getStyle(element, key);
       }
     }
-    $$7.fn[name] = function (key, value) {
+    $$4.fn[name] = function (key, value) {
       var _this = this;
       if (isObjectLike(key)) {
         each(key, function (k, v) {
@@ -2269,14 +2217,14 @@
     };
   });
 
-  $$7.fn.children = function (selector) {
+  $$4.fn.children = function (selector) {
     var children = [];
     this.each(function (_, element) {
       each(element.childNodes, function (__, childNode) {
         if (!isElement(childNode)) {
           return;
         }
-        if (!selector || $$7(childNode).is(selector)) {
+        if (!selector || $$4(childNode).is(selector)) {
           children.push(childNode);
         }
       });
@@ -2284,14 +2232,14 @@
     return new JQ(unique(children));
   };
 
-  $$7.fn.slice = function () {
+  $$4.fn.slice = function () {
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
     return new JQ([].slice.apply(this, args));
   };
 
-  $$7.fn.eq = function (index) {
+  $$4.fn.eq = function (index) {
     var ret = index === -1 ? this.slice(index) : this.slice(index, +index + 1);
     return new JQ(ret);
   };
@@ -2305,23 +2253,23 @@
       while (target && isElement(target)) {
         // prevUntil, nextUntil, parentsUntil
         if (nameIndex === 2) {
-          if (selector && $$7(target).is(selector)) {
+          if (selector && $$4(target).is(selector)) {
             break;
           }
-          if (!filter || $$7(target).is(filter)) {
+          if (!filter || $$4(target).is(filter)) {
             ret.push(target);
           }
         }
         // prev, next, parent
         else if (nameIndex === 0) {
-          if (!selector || $$7(target).is(selector)) {
+          if (!selector || $$4(target).is(selector)) {
             ret.push(target);
           }
           break;
         }
         // prevAll, nextAll, parents
         else {
-          if (!selector || $$7(target).is(selector)) {
+          if (!selector || $$4(target).is(selector)) {
             ret.push(target);
           }
         }
@@ -2333,20 +2281,20 @@
   }
 
   each(['', 's', 'sUntil'], function (nameIndex, name) {
-    $$7.fn["parent".concat(name)] = function (selector, filter) {
+    $$4.fn["parent".concat(name)] = function (selector, filter) {
       // parents、parentsUntil 需要把元素的顺序反向处理，以便和 jQuery 的结果一致
-      var $nodes = !nameIndex ? this : $$7(this.get().reverse());
+      var $nodes = !nameIndex ? this : $$4(this.get().reverse());
       return dir($nodes, nameIndex, 'parentNode', selector, filter);
     };
   });
 
-  $$7.fn.closest = function (selector) {
+  $$4.fn.closest = function (selector) {
     if (this.is(selector)) {
       return this;
     }
     var matched = [];
     this.parents().each(function (_, element) {
-      if ($$7(element).is(selector)) {
+      if ($$4(element).is(selector)) {
         matched.push(element);
         return false;
       }
@@ -2389,7 +2337,7 @@
     }
     return value;
   }
-  $$7.fn.data = function (key, value) {
+  $$4.fn.data = function (key, value) {
     // 获取所有值
     if (isUndefined(key)) {
       if (!this.length) {
@@ -2438,21 +2386,21 @@
     return dataAttr(this[0], key, data(this[0], key));
   };
 
-  $$7.fn.empty = function () {
+  $$4.fn.empty = function () {
     return this.each(function () {
       this.innerHTML = '';
     });
   };
 
-  $$7.fn.extend = function (obj) {
+  $$4.fn.extend = function (obj) {
     each(obj, function (prop, value) {
       // 在 JQ 对象上扩展方法时，需要自己添加 typescript 的类型定义
-      $$7.fn[prop] = value;
+      $$4.fn[prop] = value;
     });
     return this;
   };
 
-  $$7.fn.filter = function (selector) {
+  $$4.fn.filter = function (selector) {
     if (isFunction(selector)) {
       return this.map(function (index, element) {
         return selector.call(element, index, element) ? element : undefined;
@@ -2460,21 +2408,21 @@
     }
     if (isString(selector)) {
       return this.map(function (_, element) {
-        return $$7(element).is(selector) ? element : undefined;
+        return $$4(element).is(selector) ? element : undefined;
       });
     }
-    var $selector = $$7(selector);
+    var $selector = $$4(selector);
     return this.map(function (_, element) {
       return $selector.get().indexOf(element) > -1 ? element : undefined;
     });
   };
 
-  $$7.fn.first = function () {
+  $$4.fn.first = function () {
     return this.eq(0);
   };
 
-  $$7.fn.has = function (selector) {
-    var $targets = isString(selector) ? this.find(selector) : $$7(selector);
+  $$4.fn.has = function (selector) {
+    var $targets = isString(selector) ? this.find(selector) : $$4(selector);
     var length = $targets.length;
     return this.map(function () {
       for (var i = 0; i < length; i += 1) {
@@ -2486,7 +2434,7 @@
     });
   };
 
-  $$7.fn.hasClass = function (className) {
+  $$4.fn.hasClass = function (className) {
     return this[0].classList.contains(className);
   };
 
@@ -2575,7 +2523,7 @@
     if (computedValue == null) {
       return;
     }
-    var $element = $$7(element);
+    var $element = $$4(element);
     var dimension = name.toLowerCase();
     // 特殊的值，不需要计算 padding、border、margin
     if (['auto', 'inherit', ''].indexOf(computedValue) > -1) {
@@ -2590,7 +2538,7 @@
   }
   each(['Width', 'Height'], function (_, name) {
     each(["inner".concat(name), name.toLowerCase(), "outer".concat(name)], function (funcIndex, funcName) {
-      $$7.fn[funcName] = function (margin, value) {
+      $$4.fn[funcName] = function (margin, value) {
         // 是否是赋值操作
         var isSet = arguments.length && (funcIndex < 2 || !isBoolean(margin));
         var includeMargin = margin === true || value === true;
@@ -2606,7 +2554,7 @@
     });
   });
 
-  $$7.fn.hide = function () {
+  $$4.fn.hide = function () {
     return this.each(function () {
       this.style.display = 'none';
     });
@@ -2634,8 +2582,8 @@
       // val() 和 html() 仅获取第一个元素的内容
       var firstElement = $elements[0];
       // select multiple 返回数组
-      if (nameIndex === 0 && $$7(firstElement).is('select[multiple]')) {
-        return map($$7(firstElement).find('option:checked'), function (element) {
+      if (nameIndex === 0 && $$4(firstElement).is('select[multiple]')) {
+        return map($$4(firstElement).find('option:checked'), function (element) {
           return element.value;
         });
       }
@@ -2657,19 +2605,19 @@
       // @ts-ignore
       element[propName] = value;
     }
-    $$7.fn[name] = function (value) {
+    $$4.fn[name] = function (value) {
       // 获取值
       if (!arguments.length) {
         return get(this);
       }
       // 设置值
       return this.each(function (i, element) {
-        var computedValue = isFunction(value) ? value.call(element, i, get($$7(element))) : value;
+        var computedValue = isFunction(value) ? value.call(element, i, get($$4(element))) : value;
         // value 是数组，则选中数组中的元素，反选不在数组中的元素
         if (nameIndex === 0 && Array.isArray(computedValue)) {
           // select[multiple]
-          if ($$7(element).is('select[multiple]')) {
-            map($$7(element).find('option'), function (option) {
+          if ($$4(element).is('select[multiple]')) {
+            map($$4(element).find('option'), function (option) {
               return option.selected = computedValue.indexOf(option.value) > -1;
             });
           }
@@ -2684,27 +2632,27 @@
     };
   });
 
-  $$7.fn.index = function (selector) {
+  $$4.fn.index = function (selector) {
     if (!arguments.length) {
       return this.eq(0).parent().children().get().indexOf(this[0]);
     }
     if (isString(selector)) {
-      return $$7(selector).get().indexOf(this[0]);
+      return $$4(selector).get().indexOf(this[0]);
     }
-    return this.get().indexOf($$7(selector)[0]);
+    return this.get().indexOf($$4(selector)[0]);
   };
 
-  $$7.fn.last = function () {
+  $$4.fn.last = function () {
     return this.eq(-1);
   };
 
   each(['', 'All', 'Until'], function (nameIndex, name) {
-    $$7.fn["next".concat(name)] = function (selector, filter) {
+    $$4.fn["next".concat(name)] = function (selector, filter) {
       return dir(this, nameIndex, 'nextElementSibling', selector, filter);
     };
   });
 
-  $$7.fn.not = function (selector) {
+  $$4.fn.not = function (selector) {
     var $excludes = this.filter(selector);
     return this.map(function (_, element) {
       return $excludes.index(element) > -1 ? undefined : element;
@@ -2714,10 +2662,10 @@
   /**
    * 返回最近的用于定位的父元素
    */
-  $$7.fn.offsetParent = function () {
+  $$4.fn.offsetParent = function () {
     return this.map(function () {
       var offsetParent = this.offsetParent;
-      while (offsetParent && $$7(offsetParent).css('position') === 'static') {
+      while (offsetParent && $$4(offsetParent).css('position') === 'static') {
         offsetParent = offsetParent.offsetParent;
       }
       return offsetParent || document.documentElement;
@@ -2727,7 +2675,7 @@
   function floatStyle($element, name) {
     return parseFloat($element.css(name));
   }
-  $$7.fn.position = function () {
+  $$4.fn.position = function () {
     if (!this.length) {
       return undefined;
     }
@@ -2767,7 +2715,7 @@
     };
   }
   function set(element, value, index) {
-    var $element = $$7(element);
+    var $element = $$4(element);
     var position = $element.css('position');
     if (position === 'static') {
       $element.css('position', 'relative');
@@ -2792,7 +2740,7 @@
       left: computedValue.left != null ? computedValue.left - currentOffset.left + currentLeft : undefined
     });
   }
-  $$7.fn.offset = function (value) {
+  $$4.fn.offset = function (value) {
     // 获取坐标
     if (!arguments.length) {
       if (!this.length) {
@@ -2806,20 +2754,20 @@
     });
   };
 
-  $$7.fn.one = function (types, selector, data, callback) {
+  $$4.fn.one = function (types, selector, data, callback) {
     // @ts-ignore
     return this.on(types, selector, data, callback, true);
   };
 
   each(['', 'All', 'Until'], function (nameIndex, name) {
-    $$7.fn["prev".concat(name)] = function (selector, filter) {
+    $$4.fn["prev".concat(name)] = function (selector, filter) {
       // prevAll、prevUntil 需要把元素的顺序倒序处理，以便和 jQuery 的结果一致
-      var $nodes = !nameIndex ? this : $$7(this.get().reverse());
+      var $nodes = !nameIndex ? this : $$4(this.get().reverse());
       return dir($nodes, nameIndex, 'previousElementSibling', selector, filter);
     };
   });
 
-  $$7.fn.removeAttr = function (attributeName) {
+  $$4.fn.removeAttr = function (attributeName) {
     var names = attributeName.split(' ').filter(function (name) {
       return name;
     });
@@ -2831,13 +2779,13 @@
     });
   };
 
-  $$7.fn.removeData = function (name) {
+  $$4.fn.removeData = function (name) {
     return this.each(function () {
       removeData(this, name);
     });
   };
 
-  $$7.fn.removeProp = function (name) {
+  $$4.fn.removeProp = function (name) {
     return this.each(function () {
       try {
         // @ts-ignore
@@ -2849,23 +2797,23 @@
   // TODO: Remove from `core-js@4`
   require('../modules/es.string.replace-all');
 
-  $$7.fn.replaceWith = function (newContent) {
+  $$4.fn.replaceWith = function (newContent) {
     this.each(function (index, element) {
       var content = newContent;
       if (isFunction(content)) {
         content = content.call(element, index, element.innerHTML);
       } else if (index && !isString(content)) {
-        content = $$7(content).clone();
+        content = $$4(content).clone();
       }
-      $$7(element).before(content);
+      $$4(element).before(content);
     });
     return this.remove();
   };
 
-  $$7.fn.replaceAll = function (target) {
+  $$4.fn.replaceAll = function (target) {
     var _this = this;
-    return $$7(target).map(function (index, element) {
-      $$7(element).replaceWith(index ? _this.clone() : _this);
+    return $$4(target).map(function (index, element) {
+      $$4(element).replaceWith(index ? _this.clone() : _this);
       return _this.get();
     });
   };
@@ -2874,12 +2822,12 @@
    * 将表单元素的值组合成键值对数组
    * @returns {Array}
    */
-  $$7.fn.serializeArray = function () {
+  $$4.fn.serializeArray = function () {
     var result = [];
     this.each(function (_, element) {
       var elements = element instanceof HTMLFormElement ? element.elements : [element];
-      $$7(elements).each(function (_, element) {
-        var $element = $$7(element);
+      $$4(elements).each(function (_, element) {
+        var $element = $$4(element);
         var type = element.type;
         var nodeName = element.nodeName.toLowerCase();
         if (nodeName !== 'fieldset' && element.name && !element.disabled && ['input', 'select', 'textarea', 'keygen'].indexOf(nodeName) > -1 && ['submit', 'button', 'image', 'reset', 'file'].indexOf(type) === -1 && (['radio', 'checkbox'].indexOf(type) === -1 || element.checked)) {
@@ -2897,7 +2845,7 @@
     return result;
   };
 
-  $$7.fn.serialize = function () {
+  $$4.fn.serialize = function () {
     return param(this.serializeArray());
   };
 
@@ -2925,7 +2873,7 @@
    * 显示指定元素
    * @returns {JQ}
    */
-  $$7.fn.show = function () {
+  $$4.fn.show = function () {
     return this.each(function () {
       if (this.style.display === 'none') {
         this.style.display = '';
@@ -2941,26 +2889,26 @@
    * @param selector {String=}
    * @returns {JQ}
    */
-  $$7.fn.siblings = function (selector) {
+  $$4.fn.siblings = function (selector) {
     return this.prevAll(selector).add(this.nextAll(selector));
   };
 
   /**
    * 切换元素的显示状态
    */
-  $$7.fn.toggle = function () {
+  $$4.fn.toggle = function () {
     return this.each(function () {
-      getStyle(this, 'display') === 'none' ? $$7(this).show() : $$7(this).hide();
+      getStyle(this, 'display') === 'none' ? $$4(this).show() : $$4(this).hide();
     });
   };
 
-  $$7.fn.reflow = function () {
+  $$4.fn.reflow = function () {
       return this.each(function () {
           return this.clientLeft;
       });
   };
 
-  $$7.fn.transition = function (duration) {
+  $$4.fn.transition = function (duration) {
       if (isNumber(duration)) {
           duration = `${duration}ms`;
       }
@@ -2970,7 +2918,7 @@
       });
   };
 
-  $$7.fn.transitionEnd = function (callback) {
+  $$4.fn.transitionEnd = function (callback) {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const that = this;
       const events = ['webkitTransitionEnd', 'transitionend'];
@@ -2990,14 +2938,14 @@
       return this;
   };
 
-  $$7.fn.transformOrigin = function (transformOrigin) {
+  $$4.fn.transformOrigin = function (transformOrigin) {
       return this.each(function () {
           this.style.webkitTransformOrigin = transformOrigin;
           this.style.transformOrigin = transformOrigin;
       });
   };
 
-  $$7.fn.transform = function (transform) {
+  $$4.fn.transform = function (transform) {
       return this.each(function () {
           this.style.webkitTransform = transform;
           this.style.transform = transform;
@@ -3027,9 +2975,9 @@
       }
   }
 
-  $$7.fn.mutation = function () {
+  $$4.fn.mutation = function () {
       return this.each((i, element) => {
-          const $this = $$7(element);
+          const $this = $$4(element);
           each(entries, (selector, apiInit) => {
               if ($this.is(selector)) {
                   mutation(selector, apiInit, i, element);
@@ -3041,8 +2989,8 @@
       });
   };
 
-  $$7.showOverlay = function (zIndex) {
-      let $overlay = $$7('.mdui-overlay');
+  $$4.showOverlay = function (zIndex) {
+      let $overlay = $$4('.mdui-overlay');
       if ($overlay.length) {
           $overlay.data('_overlay_is_deleted', false);
           if (!isUndefined(zIndex)) {
@@ -3053,7 +3001,7 @@
           if (isUndefined(zIndex)) {
               zIndex = 2000;
           }
-          $overlay = $$7('<div class="mdui-overlay">')
+          $overlay = $$4('<div class="mdui-overlay">')
               .appendTo(document.body)
               .reflow()
               .css('z-index', zIndex);
@@ -3062,8 +3010,8 @@
       return $overlay.data('_overlay_level', ++level).addClass('mdui-overlay-show');
   };
 
-  $$7.hideOverlay = function (force = false) {
-      const $overlay = $$7('.mdui-overlay');
+  $$4.hideOverlay = function (force = false) {
+      const $overlay = $$4('.mdui-overlay');
       if (!$overlay.length) {
           return;
       }
@@ -3083,8 +3031,8 @@
       });
   };
 
-  $$7.lockScreen = function () {
-      const $body = $$7('body');
+  $$4.lockScreen = function () {
+      const $body = $$4('body');
       // 不直接把 body 设为 box-sizing: border-box，避免污染全局样式
       const newBodyWidth = $body.width();
       let level = $body.data('_lockscreen_level') || 0;
@@ -3094,8 +3042,8 @@
           .data('_lockscreen_level', ++level);
   };
 
-  $$7.unlockScreen = function (force = false) {
-      const $body = $$7('body');
+  $$4.unlockScreen = function (force = false) {
+      const $body = $$4('body');
       let level = force ? 1 : $body.data('_lockscreen_level');
       if (level > 1) {
           $body.data('_lockscreen_level', --level);
@@ -3104,7 +3052,7 @@
       $body.data('_lockscreen_level', 0).removeClass('mdui-locked').width('');
   };
 
-  $$7.throttle = function (fn, delay = 16) {
+  $$4.throttle = function (fn, delay = 16) {
       let timer = null;
       return function (...args) {
           if (isNull(timer)) {
@@ -3117,7 +3065,7 @@
   };
 
   const GUID = {};
-  $$7.guid = function (name) {
+  $$4.guid = function (name) {
       if (!isUndefined(name) && !isUndefined(GUID[name])) {
           return GUID[name];
       }
@@ -3147,11 +3095,11 @@
 
   mdui.mutation = function (selector, apiInit) {
       if (isUndefined(selector) || isUndefined(apiInit)) {
-          $$7(document).mutation();
+          $$4(document).mutation();
           return;
       }
       entries[selector] = apiInit;
-      $$7(selector).each((i, element) => mutation(selector, apiInit, i, element));
+      $$4(selector).each((i, element) => mutation(selector, apiInit, i, element));
   };
 
   /**
@@ -3175,7 +3123,7 @@
           // @ts-ignore
           jQuery(target).trigger(fullEventName, parameters);
       }
-      const $target = $$7(target);
+      const $target = $$4(target);
       // mdui.jq 事件
       $target.trigger(fullEventName, parameters);
       const eventParams = {
@@ -3189,9 +3137,9 @@
       $target[0].dispatchEvent(eventObject);
   }
 
-  const $document = $$7(document);
-  const $window = $$7(window);
-  $$7('body');
+  const $document = $$4(document);
+  const $window = $$4(window);
+  $$4('body');
 
   const DEFAULT_OPTIONS$d = {
       tolerance: 5,
@@ -3222,7 +3170,7 @@
            * AnimationFrame ID
            */
           this.rafId = 0;
-          this.$element = $$7(selector).first();
+          this.$element = $$4(selector).first();
           extend(this.options, options);
           // tolerance 参数若为数值，转换为对象
           const tolerance = this.options.tolerance;
@@ -3354,7 +3302,7 @@
    * @param name 属性名
    */
   function parseOptions(element, name) {
-      const attr = $$7(element).attr(name);
+      const attr = $$4(element).attr(name);
       if (!attr) {
           return {};
       }
@@ -3362,7 +3310,7 @@
   }
 
   const customAttr$9 = 'mdui-headroom';
-  $$7(() => {
+  $$4(() => {
       mdui.mutation(`[${customAttr$9}]`, function () {
           new mdui.Headroom(this, parseOptions(this, customAttr$9));
       });
@@ -3383,7 +3331,7 @@
           this.classItemOpen = `${classPrefix}-open`;
           this.classHeader = `${classPrefix}-header`;
           this.classBody = `${classPrefix}-body`;
-          this.$element = $$7(selector).first();
+          this.$element = $$4(selector).first();
           extend(this.options, options);
           this.bindEvent();
       }
@@ -3395,7 +3343,7 @@
           const that = this;
           // 点击 header 时，打开/关闭 item
           this.$element.on('click', `.${this.classHeader}`, function () {
-              const $header = $$7(this);
+              const $header = $$4(this);
               const $item = $header.parent();
               const $items = that.getItems();
               $items.each((_, item) => {
@@ -3406,7 +3354,7 @@
           });
           // 点击关闭按钮时，关闭 item
           this.$element.on('click', `[mdui-${this.getNamespace()}-item-close]`, function () {
-              const $target = $$7(this);
+              const $target = $$4(this);
               const $item = $target.parents(`.${that.classItem}`).first();
               that.close($item);
           });
@@ -3432,7 +3380,7 @@
           if (isNumber(item)) {
               return this.getItems().eq(item);
           }
-          return $$7(item).first();
+          return $$4(item).first();
       }
       /**
        * 触发组件事件
@@ -3469,7 +3417,7 @@
           // 关闭其他项
           if (this.options.accordion) {
               this.$element.children(`.${this.classItemOpen}`).each((_, element) => {
-                  const $element = $$7(element);
+                  const $element = $$4(element);
                   if (!$element.is($item)) {
                       this.close($element);
                   }
@@ -3532,7 +3480,7 @@
   mdui.Collapse = Collapse;
 
   const customAttr$8 = 'mdui-collapse';
-  $$7(() => {
+  $$4(() => {
       mdui.mutation(`[${customAttr$8}]`, function () {
           new mdui.Collapse(this, parseOptions(this, customAttr$8));
       });
@@ -3546,7 +3494,7 @@
   mdui.Panel = Panel;
 
   const customAttr$7 = 'mdui-panel';
-  $$7(() => {
+  $$4(() => {
       mdui.mutation(`[${customAttr$7}]`, function () {
           new mdui.Panel(this, parseOptions(this, customAttr$7));
       });
@@ -3557,19 +3505,19 @@
           /**
            * 表头 tr 元素
            */
-          this.$thRow = $$7();
+          this.$thRow = $$4();
           /**
            * 表格 body 中的 tr 元素
            */
-          this.$tdRows = $$7();
+          this.$tdRows = $$4();
           /**
            * 表头的 checkbox 元素
            */
-          this.$thCheckbox = $$7();
+          this.$thCheckbox = $$4();
           /**
            * 表格 body 中的 checkbox 元素
            */
-          this.$tdCheckboxs = $$7();
+          this.$tdCheckboxs = $$4();
           /**
            * 表格行是否可选择
            */
@@ -3578,7 +3526,7 @@
            * 已选中的行数
            */
           this.selectedRow = 0;
-          this.$element = $$7(selector).first();
+          this.$element = $$4(selector).first();
           this.init();
       }
       /**
@@ -3620,14 +3568,14 @@
       updateTdCheckbox() {
           const rowSelectedClass = 'mdui-table-row-selected';
           this.$tdRows.each((_, row) => {
-              const $row = $$7(row);
+              const $row = $$4(row);
               // 移除旧的 checkbox
               $row.find('.mdui-table-cell-checkbox').remove();
               if (!this.selectable) {
                   return;
               }
               // 创建 DOM
-              const $checkbox = $$7(this.createCheckboxHTML('td'))
+              const $checkbox = $$4(this.createCheckboxHTML('td'))
                   .prependTo($row)
                   .find('input[type="checkbox"]');
               // 默认选中的行
@@ -3660,7 +3608,7 @@
           if (!this.selectable) {
               return;
           }
-          this.$thCheckbox = $$7(this.createCheckboxHTML('th'))
+          this.$thCheckbox = $$4(this.createCheckboxHTML('th'))
               .prependTo(this.$thRow)
               .find('input[type="checkbox"]')
               .on('change', () => {
@@ -3671,8 +3619,8 @@
               });
               this.$tdRows.each((_, row) => {
                   isCheckedAll
-                      ? $$7(row).addClass('mdui-table-row-selected')
-                      : $$7(row).removeClass('mdui-table-row-selected');
+                      ? $$4(row).addClass('mdui-table-row-selected')
+                      : $$4(row).removeClass('mdui-table-row-selected');
               });
           });
       }
@@ -3682,9 +3630,9 @@
       updateNumericCol() {
           const numericClass = 'mdui-table-col-numeric';
           this.$thRow.find('th').each((i, th) => {
-              const isNumericCol = $$7(th).hasClass(numericClass);
+              const isNumericCol = $$4(th).hasClass(numericClass);
               this.$tdRows.each((_, row) => {
-                  const $td = $$7(row).find('td').eq(i);
+                  const $td = $$4(row).find('td').eq(i);
                   isNumericCol
                       ? $td.addClass(numericClass)
                       : $td.removeClass(numericClass);
@@ -3693,18 +3641,18 @@
       }
   }
   const dataName$3 = '_mdui_table';
-  $$7(() => {
+  $$4(() => {
       mdui.mutation('.mdui-table', function () {
-          const $element = $$7(this);
+          const $element = $$4(this);
           if (!$element.data(dataName$3)) {
               $element.data(dataName$3, new Table($element));
           }
       });
   });
   mdui.updateTables = function (selector) {
-      const $elements = isUndefined(selector) ? $$7('.mdui-table') : $$7(selector);
+      const $elements = isUndefined(selector) ? $$4('.mdui-table') : $$4(selector);
       $elements.each((_, element) => {
-          const $element = $$7(element);
+          const $element = $$4(element);
           const instance = $element.data(dataName$3);
           if (instance) {
               instance.init();
@@ -3828,7 +3776,7 @@
       const translate = `translate3d(${-center.x + width / 2}px,` +
           `${-center.y + height / 2}px, 0) scale(1)`;
       // 涟漪的 DOM 结构，并缓存动画效果
-      $$7(`<div class="mdui-ripple-wave" ` +
+      $$4(`<div class="mdui-ripple-wave" ` +
           `style="width:${diameter}px;height:${diameter}px;` +
           `margin-top:-${diameter / 2}px;margin-left:-${diameter / 2}px;` +
           `left:${center.x}px;top:${center.y}px;"></div>`)
@@ -3870,9 +3818,9 @@
    * @param this
    */
   function hide() {
-      const $ripple = $$7(this);
+      const $ripple = $$4(this);
       $ripple.children('.mdui-ripple-wave').each((_, wave) => {
-          removeRipple($$7(wave));
+          removeRipple($$4(wave));
       });
       $ripple.off(`${moveEvent} ${endEvent} ${cancelEvent}`, hide);
   }
@@ -3889,7 +3837,7 @@
       if (event.target === document) {
           return;
       }
-      const $target = $$7(event.target);
+      const $target = $$4(event.target);
       // 获取含 .mdui-ripple 类的元素
       const $ripple = $target.hasClass('mdui-ripple')
           ? $target
@@ -3935,7 +3883,7 @@
           $ripple.on(`${moveEvent} ${endEvent} ${cancelEvent}`, hide);
       }
   }
-  $$7(() => {
+  $$4(() => {
       $document.on(startEvent, showRipple).on(unlockEvent, register);
   });
 
@@ -3951,7 +3899,7 @@
   function inputEvent(event, data = {}) {
       data = extend({}, defaultData, data);
       const input = event.target;
-      const $input = $$7(input);
+      const $input = $$4(input);
       const eventType = event.type;
       const value = $input.val();
       // 文本框类型
@@ -4014,7 +3962,7 @@
       const maxLength = $input.attr('maxlength');
       if (maxLength) {
           if (data.reInit || data.domLoadedEvent) {
-              $$7('<div class="mdui-textfield-counter">' +
+              $$4('<div class="mdui-textfield-counter">' +
                   `<span class="mdui-textfield-counter-inputed"></span> / ${maxLength}` +
                   '</div>').appendTo($textfield);
           }
@@ -4029,12 +3977,12 @@
           $textfield.addClass('mdui-textfield-has-bottom');
       }
   }
-  $$7(() => {
+  $$4(() => {
       // 绑定事件
       $document.on('input focus blur', '.mdui-textfield-input', { useCapture: true }, inputEvent);
       // 可展开文本框展开
       $document.on('click', '.mdui-textfield-expandable .mdui-textfield-icon', function () {
-          $$7(this)
+          $$4(this)
               .parents('.mdui-textfield')
               .addClass('mdui-textfield-expanded')
               .find('.mdui-textfield-input')[0]
@@ -4042,7 +3990,7 @@
       });
       // 可展开文本框关闭
       $document.on('click', '.mdui-textfield-expanded .mdui-textfield-close', function () {
-          $$7(this)
+          $$4(this)
               .parents('.mdui-textfield')
               .removeClass('mdui-textfield-expanded')
               .find('.mdui-textfield-input')
@@ -4052,15 +4000,15 @@
        * 初始化文本框
        */
       mdui.mutation('.mdui-textfield', function () {
-          $$7(this).find('.mdui-textfield-input').trigger('input', {
+          $$4(this).find('.mdui-textfield-input').trigger('input', {
               domLoadedEvent: true,
           });
       });
   });
   mdui.updateTextFields = function (selector) {
-      const $elements = isUndefined(selector) ? $$7('.mdui-textfield') : $$7(selector);
+      const $elements = isUndefined(selector) ? $$4('.mdui-textfield') : $$4(selector);
       $elements.each((_, element) => {
-          $$7(element).find('.mdui-textfield-input').trigger('input', {
+          $$4(element).find('.mdui-textfield-input').trigger('input', {
               reInit: true,
           });
       });
@@ -4102,9 +4050,9 @@
    * @param $slider
    */
   function reInit($slider) {
-      const $track = $$7('<div class="mdui-slider-track"></div>');
-      const $fill = $$7('<div class="mdui-slider-fill"></div>');
-      const $thumb = $$7('<div class="mdui-slider-thumb"></div>');
+      const $track = $$4('<div class="mdui-slider-track"></div>');
+      const $fill = $$4('<div class="mdui-slider-fill"></div>');
+      const $thumb = $$4('<div class="mdui-slider-thumb"></div>');
       const $input = $slider.find('input[type="range"]');
       const isDisabled = $input[0].disabled;
       const isDiscrete = $slider.hasClass('mdui-slider-discrete');
@@ -4118,9 +4066,9 @@
       $slider.find('.mdui-slider-thumb').remove();
       $slider.append($track).append($fill).append($thumb);
       // 间续型滑块
-      let $thumbText = $$7();
+      let $thumbText = $$4();
       if (isDiscrete) {
-          $thumbText = $$7('<span></span>');
+          $thumbText = $$4('<span></span>');
           $thumb.empty().append($thumbText);
       }
       $slider.data('_slider_$track', $track);
@@ -4136,10 +4084,10 @@
       updateValueStyle($slider);
   }
   const rangeSelector = '.mdui-slider input[type="range"]';
-  $$7(() => {
+  $$4(() => {
       // 滑块滑动事件
       $document.on('input change', rangeSelector, function () {
-          const $slider = $$7(this).parent();
+          const $slider = $$4(this).parent();
           updateValueStyle($slider);
       });
       // 开始触摸滑块事件
@@ -4151,7 +4099,7 @@
           if (this.disabled) {
               return;
           }
-          const $slider = $$7(this).parent();
+          const $slider = $$4(this).parent();
           $slider.addClass('mdui-slider-focus');
       });
       // 结束触摸滑块事件
@@ -4162,7 +4110,7 @@
           if (this.disabled) {
               return;
           }
-          const $slider = $$7(this).parent();
+          const $slider = $$4(this).parent();
           $slider.removeClass('mdui-slider-focus');
       });
       $document.on(unlockEvent, rangeSelector, register);
@@ -4170,13 +4118,13 @@
        * 初始化滑块
        */
       mdui.mutation('.mdui-slider', function () {
-          reInit($$7(this));
+          reInit($$4(this));
       });
   });
   mdui.updateSliders = function (selector) {
-      const $elements = isUndefined(selector) ? $$7('.mdui-slider') : $$7(selector);
+      const $elements = isUndefined(selector) ? $$4('.mdui-slider') : $$4(selector);
       $elements.each((_, element) => {
-          reInit($$7(element));
+          reInit($$4(element));
       });
   };
 
@@ -4193,7 +4141,7 @@
            * 当前 fab 的状态
            */
           this.state = 'closed';
-          this.$element = $$7(selector).first();
+          this.$element = $$4(selector).first();
           extend(this.options, options);
           this.$btn = this.$element.find('.mdui-fab');
           this.$dial = this.$element.find('.mdui-fab-dial');
@@ -4207,7 +4155,7 @@
           }
           // 触摸屏幕其他地方关闭快速拨号
           $document.on(startEvent, (event) => {
-              if ($$7(event.target).parents('.mdui-fab-wrapper').length) {
+              if ($$4(event.target).parents('.mdui-fab-wrapper').length) {
                   return;
               }
               this.close();
@@ -4309,7 +4257,7 @@
   mdui.Fab = Fab;
 
   const customAttr$6 = 'mdui-fab';
-  $$7(() => {
+  $$4(() => {
       // mouseenter 不冒泡，无法进行事件委托，这里用 mouseover 代替。
       // 不管是 click 、 mouseover 还是 touchstart ，都先初始化。
       $document.on('touchstart mousedown mouseover', `[${customAttr$6}]`, function () {
@@ -4342,7 +4290,7 @@
           /**
            * 生成的 `<div class="mdui-select">` 元素的 JQ 对象
            */
-          this.$element = $$7();
+          this.$element = $$4();
           /**
            * 配置参数
            */
@@ -4354,15 +4302,15 @@
           /**
            * 占位元素，显示已选中菜单项的文本
            */
-          this.$selected = $$7();
+          this.$selected = $$4();
           /**
            * 菜单项的外层元素的 JQ 对象
            */
-          this.$menu = $$7();
+          this.$menu = $$4();
           /**
            * 菜单项数组的 JQ 对象
            */
-          this.$items = $$7();
+          this.$items = $$4();
           /**
            * 当前选中的菜单项的索引号
            */
@@ -4379,16 +4327,16 @@
            * 当前 select 的状态
            */
           this.state = 'closed';
-          this.$native = $$7(selector).first();
+          this.$native = $$4(selector).first();
           this.$native.hide();
           extend(this.options, options);
           // 为当前 select 生成唯一 ID
-          this.uniqueID = $$7.guid();
+          this.uniqueID = $$4.guid();
           // 生成 select
           this.handleUpdate();
           // 点击 select 外面区域关闭
           $document.on('click touchstart', (event) => {
-              const $target = $$7(event.target);
+              const $target = $$4(event.target);
               if (this.isOpen() &&
                   !$target.is(this.$element) &&
                   !contains(this.$element[0], $target[0])) {
@@ -4479,7 +4427,7 @@
           }
           this.selectedValue = this.$native.val();
           const itemsData = [];
-          this.$items = $$7();
+          this.$items = $$4();
           // 生成 HTML
           this.$native.find('option').each((index, option) => {
               const text = option.textContent || '';
@@ -4502,16 +4450,16 @@
                   (selected ? ' selected' : '') +
                   `>${text}</div>`);
           });
-          this.$selected = $$7(`<span class="mdui-select-selected">${this.selectedText}</span>`);
-          this.$element = $$7(`<div class="mdui-select mdui-select-position-${this.options.position}" ` +
+          this.$selected = $$4(`<span class="mdui-select-selected">${this.selectedText}</span>`);
+          this.$element = $$4(`<div class="mdui-select mdui-select-position-${this.options.position}" ` +
               `style="${this.$native.attr('style')}" ` +
               `id="${this.uniqueID}"></div>`)
               .show()
               .append(this.$selected);
-          this.$menu = $$7('<div class="mdui-select-menu"></div>')
+          this.$menu = $$4('<div class="mdui-select-menu"></div>')
               .appendTo(this.$element)
               .append(this.$items);
-          $$7(`#${this.uniqueID}`).remove();
+          $$4(`#${this.uniqueID}`).remove();
           this.$native.after(this.$element);
           // 根据 select 的 size 属性设置高度
           this.size = parseInt(this.$native.attr('size') || '0');
@@ -4528,7 +4476,7 @@
               if (that.state === 'closing') {
                   return;
               }
-              const $item = $$7(this);
+              const $item = $$4(this);
               const index = $item.index();
               const data = itemsData[index];
               if (data.disabled) {
@@ -4546,7 +4494,7 @@
           });
           // 点击 $element 时打开下拉菜单
           this.$element.on('click', (event) => {
-              const $target = $$7(event.target);
+              const $target = $$4(event.target);
               // 在菜单上点击时不打开
               if ($target.is('.mdui-select-menu') ||
                   $target.is('.mdui-select-menu-item')) {
@@ -4628,13 +4576,13 @@
   mdui.Select = Select;
 
   const customAttr$5 = 'mdui-select';
-  $$7(() => {
+  $$4(() => {
       mdui.mutation(`[${customAttr$5}]`, function () {
           new mdui.Select(this, parseOptions(this, customAttr$5));
       });
   });
 
-  $$7(() => {
+  $$4(() => {
       // 滚动时隐藏应用栏
       mdui.mutation('.mdui-appbar-scroll-hide', function () {
           new mdui.Headroom(this);
@@ -4662,15 +4610,15 @@
            * 当前激活的 tab 的索引号。为 -1 时表示没有激活的选项卡，或不存在选项卡
            */
           this.activeIndex = -1;
-          this.$element = $$7(selector).first();
+          this.$element = $$4(selector).first();
           extend(this.options, options);
           this.$tabs = this.$element.children('a');
-          this.$indicator = $$7('<div class="mdui-tab-indicator"></div>').appendTo(this.$element);
+          this.$indicator = $$4('<div class="mdui-tab-indicator"></div>').appendTo(this.$element);
           // 根据 url hash 获取默认激活的选项卡
           const hash = window.location.hash;
           if (hash) {
               this.$tabs.each((index, tab) => {
-                  if ($$7(tab).attr('href') === hash) {
+                  if ($$4(tab).attr('href') === hash) {
                       this.activeIndex = index;
                       return false;
                   }
@@ -4680,7 +4628,7 @@
           // 含 .mdui-tab-active 的元素默认激活
           if (this.activeIndex === -1) {
               this.$tabs.each((index, tab) => {
-                  if ($$7(tab).hasClass('mdui-tab-active')) {
+                  if ($$4(tab).hasClass('mdui-tab-active')) {
                       this.activeIndex = index;
                       return false;
                   }
@@ -4694,7 +4642,7 @@
           // 设置激活状态选项卡
           this.setActive();
           // 监听窗口大小变化事件，调整指示器位置
-          $window.on('resize', $$7.throttle(() => this.setIndicatorPosition(), 100));
+          $window.on('resize', $$4.throttle(() => this.setIndicatorPosition(), 100));
           // 监听点击选项卡事件
           this.$tabs.each((_, tab) => {
               this.bindTabEvent(tab);
@@ -4712,7 +4660,7 @@
        * @param tab
        */
       bindTabEvent(tab) {
-          const $tab = $$7(tab);
+          const $tab = $$4(tab);
           // 点击或鼠标移入触发的事件
           const clickEvent = () => {
               // 禁用状态的选项卡无法选中
@@ -4749,7 +4697,7 @@
        */
       setActive() {
           this.$tabs.each((index, tab) => {
-              const $tab = $$7(tab);
+              const $tab = $$4(tab);
               const targetId = $tab.attr('href') || '';
               // 设置选项卡激活状态
               if (index === this.activeIndex && !this.isDisabled($tab)) {
@@ -4761,12 +4709,12 @@
                       this.triggerEvent('show', $tab);
                       $tab.addClass('mdui-tab-active');
                   }
-                  $$7(targetId).show();
+                  $$4(targetId).show();
                   this.setIndicatorPosition();
               }
               else {
                   $tab.removeClass('mdui-tab-active');
-                  $$7(targetId).hide();
+                  $$4(targetId).hide();
               }
           });
       }
@@ -4892,7 +4840,7 @@
   mdui.Tab = Tab;
 
   const customAttr$4 = 'mdui-tab';
-  $$7(() => {
+  $$4(() => {
       mdui.mutation(`[${customAttr$4}]`, function () {
           new mdui.Tab(this, parseOptions(this, customAttr$4));
       });
@@ -4916,7 +4864,7 @@
            * 当前是否显示着遮罩层
            */
           this.overlay = false;
-          this.$element = $$7(selector).first();
+          this.$element = $$4(selector).first();
           extend(this.options, options);
           this.position = this.$element.hasClass('mdui-drawer-right')
               ? 'right'
@@ -4934,14 +4882,14 @@
               this.state = 'closed';
           }
           // 浏览器窗口大小调整时
-          $window.on('resize', $$7.throttle(() => {
+          $window.on('resize', $$4.throttle(() => {
               if (this.isDesktop()) {
                   // 由手机平板切换到桌面时
                   // 如果显示着遮罩，则隐藏遮罩
                   if (this.overlay && !this.options.overlay) {
-                      $$7.hideOverlay();
+                      $$4.hideOverlay();
                       this.overlay = false;
-                      $$7.unlockScreen();
+                      $$4.unlockScreen();
                   }
                   // 没有强制关闭，则状态为打开状态
                   if (!this.$element.hasClass('mdui-drawer-close')) {
@@ -4951,10 +4899,10 @@
               else if (!this.overlay && this.state === 'opened') {
                   // 由桌面切换到手机平板时。如果抽屉栏是打开着的且没有遮罩层，则关闭抽屉栏
                   if (this.$element.hasClass('mdui-drawer-open')) {
-                      $$7.showOverlay();
+                      $$4.showOverlay();
                       this.overlay = true;
-                      $$7.lockScreen();
-                      $$7('.mdui-overlay').one('click', () => this.close());
+                      $$4.lockScreen();
+                      $$4('.mdui-overlay').one('click', () => this.close());
                   }
                   else {
                       this.state = 'closed';
@@ -4963,7 +4911,7 @@
           }, 100));
           // 绑定关闭按钮事件
           this.$element.find('[mdui-drawer-close]').each((_, close) => {
-              $$7(close).on('click', () => this.close());
+              $$4(close).on('click', () => this.close());
           });
           this.swipeSupport();
       }
@@ -4986,7 +4934,7 @@
           let swipeStartX;
           let swiping = null;
           let maybeSwiping = false;
-          const $body = $$7('body');
+          const $body = $$4('body');
           // 手势触发的范围
           const swipeAreaWidth = 24;
           function setPosition(translateX) {
@@ -5037,7 +4985,7 @@
                           cleanPosition();
                       }
                   }
-                  $$7.unlockScreen();
+                  $$4.unlockScreen();
               }
               else {
                   maybeSwiping = false;
@@ -5066,7 +5014,7 @@
                   if (dXAbs > threshold && dYAbs <= threshold) {
                       swipeStartX = touchX;
                       swiping = that.state === 'opened' ? 'closing' : 'opening';
-                      $$7.lockScreen();
+                      $$4.lockScreen();
                       setPosition(getTranslateX(touchX));
                   }
                   else if (dXAbs <= threshold && dYAbs > threshold) {
@@ -5139,7 +5087,7 @@
           this.state = 'opening';
           this.triggerEvent('open');
           if (!this.options.overlay) {
-              $$7('body').addClass(`mdui-drawer-body-${this.position}`);
+              $$4('body').addClass(`mdui-drawer-body-${this.position}`);
           }
           this.$element
               .removeClass('mdui-drawer-close')
@@ -5147,8 +5095,8 @@
               .transitionEnd(() => this.transitionEnd());
           if (!this.isDesktop() || this.options.overlay) {
               this.overlay = true;
-              $$7.showOverlay().one('click', () => this.close());
-              $$7.lockScreen();
+              $$4.showOverlay().one('click', () => this.close());
+              $$4.lockScreen();
           }
       }
       /**
@@ -5161,16 +5109,16 @@
           this.state = 'closing';
           this.triggerEvent('close');
           if (!this.options.overlay) {
-              $$7('body').removeClass(`mdui-drawer-body-${this.position}`);
+              $$4('body').removeClass(`mdui-drawer-body-${this.position}`);
           }
           this.$element
               .addClass('mdui-drawer-close')
               .removeClass('mdui-drawer-open')
               .transitionEnd(() => this.transitionEnd());
           if (this.overlay) {
-              $$7.hideOverlay();
+              $$4.hideOverlay();
               this.overlay = false;
-              $$7.unlockScreen();
+              $$4.unlockScreen();
           }
       }
       /**
@@ -5189,14 +5137,14 @@
   mdui.Drawer = Drawer;
 
   const customAttr$3 = 'mdui-drawer';
-  $$7(() => {
+  $$4(() => {
       mdui.mutation(`[${customAttr$3}]`, function () {
-          const $element = $$7(this);
+          const $element = $$4(this);
           const options = parseOptions(this, customAttr$3);
           const selector = options.target;
           // @ts-ignore
           delete options.target;
-          const $drawer = $$7(selector).first();
+          const $drawer = $$4(selector).first();
           const instance = new mdui.Drawer($drawer, options);
           $element.on('click', () => instance.toggle());
       });
@@ -5266,16 +5214,16 @@
            * dialog 元素是否是动态添加的
            */
           this.append = false;
-          this.$element = $$7(selector).first();
+          this.$element = $$4(selector).first();
           // 如果对话框元素没有在当前文档中，则需要添加
           if (!contains(document.body, this.$element[0])) {
               this.append = true;
-              $$7('body').append(this.$element);
+              $$4('body').append(this.$element);
           }
           extend(this.options, options);
           // 绑定取消按钮事件
           this.$element.find('[mdui-dialog-cancel]').each((_, cancel) => {
-              $$7(cancel).on('click', () => {
+              $$4(cancel).on('click', () => {
                   this.triggerEvent('cancel');
                   if (this.options.closeOnCancel) {
                       this.close();
@@ -5284,7 +5232,7 @@
           });
           // 绑定确认按钮事件
           this.$element.find('[mdui-dialog-confirm]').each((_, confirm) => {
-              $$7(confirm).on('click', () => {
+              $$4(confirm).on('click', () => {
                   this.triggerEvent('confirm');
                   if (this.options.closeOnConfirm) {
                       this.close();
@@ -5293,7 +5241,7 @@
           });
           // 绑定关闭按钮事件
           this.$element.find('[mdui-dialog-close]').each((_, close) => {
-              $$7(close).on('click', () => this.close());
+              $$4(close).on('click', () => this.close());
           });
       }
       /**
@@ -5340,7 +5288,7 @@
        * @param event
        */
       overlayClick(event) {
-          if ($$7(event.target).hasClass('mdui-overlay') &&
+          if ($$4(event.target).hasClass('mdui-overlay') &&
               currentInst$1) {
               currentInst$1.close();
           }
@@ -5359,10 +5307,10 @@
               this.$element.hide();
               // 所有对话框都关闭，且当前没有打开的对话框时，解锁屏幕
               if (!queue(queueName$1).length && !currentInst$1 && isLockScreen) {
-                  $$7.unlockScreen();
+                  $$4.unlockScreen();
                   isLockScreen = false;
               }
-              $window.off('resize', $$7.throttle(this.readjust, 100));
+              $window.off('resize', $$4.throttle(this.readjust, 100));
               if (this.options.destroyOnClosed) {
                   this.destroy();
               }
@@ -5374,12 +5322,12 @@
       doOpen() {
           currentInst$1 = this;
           if (!isLockScreen) {
-              $$7.lockScreen();
+              $$4.lockScreen();
               isLockScreen = true;
           }
           this.$element.show();
           this.readjust();
-          $window.on('resize', $$7.throttle(this.readjust, 100));
+          $window.on('resize', $$4.throttle(this.readjust, 100));
           // 打开消息框
           this.state = 'opening';
           this.triggerEvent('open');
@@ -5388,7 +5336,7 @@
               .transitionEnd(() => this.transitionEnd());
           // 不存在遮罩层元素时，添加遮罩层
           if (!$overlay) {
-              $overlay = $$7.showOverlay(5100);
+              $overlay = $$4.showOverlay(5100);
           }
           // 点击遮罩层时是否关闭对话框
           if (this.options.modal) {
@@ -5456,10 +5404,10 @@
               this.triggerEvent('close');
               // 所有对话框都关闭，且当前没有打开的对话框时，隐藏遮罩
               if (!queue(queueName$1).length && $overlay) {
-                  $$7.hideOverlay();
+                  $$4.hideOverlay();
                   $overlay = null;
                   // 若仍存在遮罩，恢复遮罩的 z-index
-                  $$7('.mdui-overlay').css('z-index', 2000);
+                  $$4('.mdui-overlay').css('z-index', 2000);
               }
               this.$element
                   .removeClass('mdui-dialog-open')
@@ -5498,11 +5446,11 @@
           }
           if (!queue(queueName$1).length && !currentInst$1) {
               if ($overlay) {
-                  $$7.hideOverlay();
+                  $$4.hideOverlay();
                   $overlay = null;
               }
               if (isLockScreen) {
-                  $$7.unlockScreen();
+                  $$4.unlockScreen();
                   isLockScreen = false;
               }
           }
@@ -5528,13 +5476,13 @@
 
   const customAttr$2 = 'mdui-dialog';
   const dataName$2 = '_mdui_dialog';
-  $$7(() => {
+  $$4(() => {
       $document.on('click', `[${customAttr$2}]`, function () {
           const options = parseOptions(this, customAttr$2);
           const selector = options.target;
           // @ts-ignore
           delete options.target;
-          const $dialog = $$7(selector).first();
+          const $dialog = $$4(selector).first();
           let instance = $dialog.data(dataName$2);
           if (!instance) {
               instance = new mdui.Dialog($dialog, options);
@@ -5612,7 +5560,7 @@
           instance.$element
               .find('.mdui-dialog-actions .mdui-btn')
               .each((index, button) => {
-              $$7(button).on('click', () => {
+              $$4(button).on('click', () => {
                   options.buttons[index].onClick(instance);
                   if (options.buttons[index].close) {
                       instance.close();
@@ -5850,10 +5798,10 @@
            * setTimeout 的返回值
            */
           this.timeoutId = null;
-          this.$target = $$7(selector).first();
+          this.$target = $$4(selector).first();
           extend(this.options, options);
           // 创建 Tooltip HTML
-          this.$element = $$7(`<div class="mdui-tooltip" id="${$$7.guid()}">${this.options.content}</div>`).appendTo(document.body);
+          this.$element = $$4(`<div class="mdui-tooltip" id="${$$4.guid()}">${this.options.content}</div>`).appendTo(document.body);
           // 绑定事件。元素处于 disabled 状态时无法触发鼠标事件，为了统一，把 touch 事件也禁用
           // eslint-disable-next-line @typescript-eslint/no-this-alias
           const that = this;
@@ -5890,7 +5838,7 @@
        */
       isDisabled(element) {
           return (element.disabled ||
-              $$7(element).attr('disabled') !== undefined);
+              $$4(element).attr('disabled') !== undefined);
       }
       /**
        * 是否是桌面设备
@@ -6064,10 +6012,10 @@
 
   const customAttr$1 = 'mdui-tooltip';
   const dataName$1 = '_mdui_tooltip';
-  $$7(() => {
+  $$4(() => {
       // mouseenter 不能冒泡，所以这里用 mouseover 代替
       $document.on('touchstart mouseover', `[${customAttr$1}]`, function () {
-          const $target = $$7(this);
+          const $target = $$4(this);
           let instance = $target.data(dataName$1);
           if (!instance) {
               instance = new mdui.Tooltip(this, parseOptions(this, customAttr$1));
@@ -6131,7 +6079,7 @@
               buttonColorClass = `mdui-text-color-${this.options.buttonColor}`;
           }
           // 添加 HTML
-          this.$element = $$7('<div class="mdui-snackbar">' +
+          this.$element = $$4('<div class="mdui-snackbar">' +
               `<div class="mdui-snackbar-text">${this.options.message}</div>` +
               (this.options.buttonText
                   ? `<a href="javascript:void(0)" class="mdui-snackbar-action mdui-btn mdui-ripple mdui-ripple-white ${buttonColorClass}" ${buttonColorStyle}>${this.options.buttonText}</a>`
@@ -6146,7 +6094,7 @@
        * @param event
        */
       closeOnOutsideClick(event) {
-          const $target = $$7(event.target);
+          const $target = $$4(event.target);
           if (!$target.hasClass('mdui-snackbar') &&
               !$target.parents('.mdui-snackbar').length) {
               currentInst.close();
@@ -6222,7 +6170,7 @@
               }
               // 点击 snackbar 的事件
               this.$element.on('click', (event) => {
-                  if (!$$7(event.target).hasClass('mdui-snackbar-action')) {
+                  if (!$$4(event.target).hasClass('mdui-snackbar-action')) {
                       this.options.onClick(this);
                   }
               });
@@ -6276,10 +6224,10 @@
       return instance;
   };
 
-  $$7(() => {
+  $$4(() => {
       // 切换导航项
       $document.on('click', '.mdui-bottom-nav>a', function () {
-          const $item = $$7(this);
+          const $item = $$4(this);
           const $bottomNav = $item.parent();
           $bottomNav.children('a').each((index, item) => {
               const isThis = $item.is(item);
@@ -6289,8 +6237,8 @@
                   });
               }
               isThis
-                  ? $$7(item).addClass('mdui-bottom-nav-active')
-                  : $$7(item).removeClass('mdui-bottom-nav-active');
+                  ? $$4(item).addClass('mdui-bottom-nav-active')
+                  : $$4(item).removeClass('mdui-bottom-nav-active');
           });
       });
       // 滚动时隐藏 mdui-bottom-nav-scroll-hide
@@ -6324,20 +6272,20 @@
    * @param spinner
    */
   function fillHTML(spinner) {
-      const $spinner = $$7(spinner);
+      const $spinner = $$4(spinner);
       const layer = $spinner.hasClass('mdui-spinner-colorful')
           ? layerHTML(1) + layerHTML(2) + layerHTML(3) + layerHTML(4)
           : layerHTML();
       $spinner.html(layer);
   }
-  $$7(() => {
+  $$4(() => {
       // 页面加载完后自动填充 HTML 结构
       mdui.mutation('.mdui-spinner', function () {
           fillHTML(this);
       });
   });
   mdui.updateSpinners = function (selector) {
-      const $elements = isUndefined(selector) ? $$7('.mdui-spinner') : $$7(selector);
+      const $elements = isUndefined(selector) ? $$4('.mdui-spinner') : $$4(selector);
       $elements.each(function () {
           fillHTML(this);
       });
@@ -6362,8 +6310,8 @@
            * 当前菜单状态
            */
           this.state = 'closed';
-          this.$anchor = $$7(anchorSelector).first();
-          this.$element = $$7(menuSelector).first();
+          this.$anchor = $$4(anchorSelector).first();
+          this.$element = $$4(menuSelector).first();
           // 触发菜单的元素 和 菜单必须是同级的元素，否则菜单可能不能定位
           if (!this.$anchor.parent().is(this.$element.parent())) {
               throw new Error('anchorSelector and menuSelector must be siblings');
@@ -6378,7 +6326,7 @@
           this.$anchor.on('click', () => this.toggle());
           // 点击菜单外面区域关闭菜单
           $document.on('click touchstart', (event) => {
-              const $target = $$7(event.target);
+              const $target = $$4(event.target);
               if (this.isOpen() &&
                   !$target.is(this.$element) &&
                   !contains(this.$element[0], $target[0]) &&
@@ -6391,7 +6339,7 @@
           // eslint-disable-next-line @typescript-eslint/no-this-alias
           const that = this;
           $document.on('click', '.mdui-menu-item', function () {
-              const $item = $$7(this);
+              const $item = $$4(this);
               if (!$item.find('.mdui-menu').length &&
                   $item.attr('disabled') === undefined) {
                   that.close();
@@ -6400,7 +6348,7 @@
           // 绑定点击或鼠标移入含子菜单的条目的事件
           this.bindSubMenuEvent();
           // 窗口大小变化时，重新调整菜单位置
-          $window.on('resize', $$7.throttle(() => this.readjust(), 100));
+          $window.on('resize', $$4.throttle(() => this.readjust(), 100));
       }
       /**
        * 是否为打开状态
@@ -6646,7 +6594,7 @@
               .removeClass('mdui-menu-item-active');
           // 循环关闭嵌套的子菜单
           $submenu.find('.mdui-menu').each((_, menu) => {
-              const $subSubmenu = $$7(menu);
+              const $subSubmenu = $$4(menu);
               $subSubmenu
                   .removeClass('mdui-menu-open')
                   .addClass('mdui-menu-closing')
@@ -6672,8 +6620,8 @@
           const that = this;
           // 点击打开子菜单
           this.$element.on('click', '.mdui-menu-item', function (event) {
-              const $item = $$7(this);
-              const $target = $$7(event.target);
+              const $item = $$4(this);
+              const $target = $$4(event.target);
               // 禁用状态菜单不操作
               if ($item.attr('disabled') !== undefined) {
                   return;
@@ -6693,7 +6641,7 @@
                   .parent('.mdui-menu')
                   .children('.mdui-menu-item')
                   .each((_, item) => {
-                  const $tmpSubmenu = $$7(item).children('.mdui-menu');
+                  const $tmpSubmenu = $$4(item).children('.mdui-menu');
                   if ($tmpSubmenu.length &&
                       (!$submenu.length || !$tmpSubmenu.is($submenu))) {
                       that.closeSubMenu($tmpSubmenu);
@@ -6709,9 +6657,9 @@
               let timeout = null;
               let timeoutOpen = null;
               this.$element.on('mouseover mouseout', '.mdui-menu-item', function (event) {
-                  const $item = $$7(this);
+                  const $item = $$4(this);
                   const eventType = event.type;
-                  const $relatedTarget = $$7(event.relatedTarget);
+                  const $relatedTarget = $$4(event.relatedTarget);
                   // 禁用状态的菜单不操作
                   if ($item.attr('disabled') !== undefined) {
                       return;
@@ -6821,7 +6769,7 @@
           this.triggerEvent('close');
           // 菜单开始关闭时，关闭所有子菜单
           this.$element.find('.mdui-menu').each((_, submenu) => {
-              this.closeSubMenu($$7(submenu));
+              this.closeSubMenu($$4(submenu));
           });
           this.$element
               .removeClass('mdui-menu-open')
@@ -6833,9 +6781,9 @@
 
   const customAttr = 'mdui-menu';
   const dataName = '_mdui_menu';
-  $$7(() => {
+  $$4(() => {
       $document.on('click', `[${customAttr}]`, function () {
-          const $this = $$7(this);
+          const $this = $$4(this);
           let instance = $this.data(dataName);
           if (!instance) {
               const options = parseOptions(this, customAttr);
